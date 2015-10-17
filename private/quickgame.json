@@ -1,0 +1,46 @@
+{
+  "0" : {
+    "name": "Ulysses",
+    "hull": "Frigate",
+    "armor": "10",
+    "speed": "2",
+    "shield": "10",
+    "shield_recharge": "1",
+    "power": "3",
+    "x": "4",
+    "y": "1"
+  },
+  "1" : {
+    "name": "Odowamne",
+    "hull": "Corvette",
+    "armor": "8",
+    "speed": "3",
+    "shield": "5",
+    "shield_recharge": "1",
+    "power": "2",
+    "x": "3",
+    "y": "1"
+  },
+  "2" : {
+    "name": "Berg",
+    "hull": "Frigate",
+    "armor": "10",
+    "speed": "2",
+    "shield": "10",
+    "shield_recharge": "1",
+    "power": "3",
+    "x": "4",
+    "y": "8"
+  },
+  "3" : {
+    "name": "Fjenwyck",
+    "hull": "Corvette",
+    "armor": "8",
+    "speed": "3",
+    "shield": "5",
+    "shield_recharge": "1",
+    "power": "2",
+    "x": "5",
+    "y": "8"
+  }
+}
