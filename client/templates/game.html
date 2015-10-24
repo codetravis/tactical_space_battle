@@ -1,0 +1,37 @@
+<template name="game">
+<h1>Game</h1>
+
+<table id="shiplist">
+<thead>
+  <th>Name</th>
+  <th>Hull</th>
+  <th>Armor</th>
+  <th>Shield</th>
+  <th>Coordinates</th>
+  <th></th>
+</thead>
+{{#each ships}}
+  {{> ship }}
+{{/each}}
+</table>
+
+{{#if player_turn}}
+  <button id="end_turn">End Turn</button>
+{{/if}}
+</template>
+
+
+<template name="ship">
+  <tr>
+    <td>{{name}}</td>
+    <td>{{hull}}</td>
+    <td>{{armor}}</td>
+    <td>{{shield}}</td>
+    <td>{{x}} - {{y}}</td>
+    <td>
+      {{#if player_turn}}
+        <button class="ship_action" id="{{_id}}">Take Action</button>
+      {{/if}}
+    </td>
+  </tr>
+</template>

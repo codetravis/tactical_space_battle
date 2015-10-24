@@ -7,7 +7,12 @@ Router.route('/', {
   template: 'home'
 });
 
-Router.route('/game/:_id', {
+Router.route('/game/:game_id', {
   name: 'game',
   template: 'game'
+});
+
+Router.route('ship_action/:ship_id', {
+  name: 'ship_action',
+  template: 'ship_action'
 });

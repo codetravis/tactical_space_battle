@@ -1,0 +1,22 @@
+<template name="ship_action">
+<h1>Ship Actions</h1>
+<div id="move_actions">
+<h2>Moves</h2>
+<button id="move_up">Move Up</button><br/>
+<button id="move_left">Move Left</button>
+<button id="move_right">Move Right</button><br/>
+<button id="move_down">Move Down</button>
+</div>
+<div id="targets">
+{{#each enemies_in_range}}
+  {{> target}}
+{{/each}}
+</div>
+</template>
+
+<template name="target">
+  <div class="target">
+    <p>{{hull}} - {{name}} [{{armor}}] ({{shield}})</p>
+    <button class="attack" id="{{_id}}">Attack</button>
+  </div>
+</template>
