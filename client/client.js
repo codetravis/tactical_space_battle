@@ -15,7 +15,25 @@ Template.home.events({
 Template.game.helpers({
   ships: function () {
       return Ships.find({user_id: Meteor.userId(), game_id: Router.current().params.game_id})
+  },
+  
+  game: function () {
+    return Games.find({_id: Router.current().params.game_id});
+  },
+
+  draw_friend: function () {
+    var canvas = document.getElementById("main_map");
+    if (canvas.getContext) {
+      var context = canvas.getContext("2d");
+
+      var ship = Ships.findOne({_id: this._id});
+
+      context.fillStyle = "rgb(0, 100, 0, 0.80)";
+      context.fillRect(ship.x * 10, ship.y * 10, 10, 10);
+    } else {
+      console.log('no canvas?');
     }
+  }
 });
 
 Template.registerHelper('player_turn', function () {

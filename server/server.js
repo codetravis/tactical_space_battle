@@ -9,7 +9,7 @@ Meteor.methods({
 
   QuickGame: function() {
     var user_id = Meteor.userId();
-    var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1'});
+    var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1', turn_count: 0, max_turns: 15});
     var parsed_json = EJSON.parse(Assets.getText("quickgame.json"));
     var count = 0;
     for (var ship in parsed_json) {
@@ -31,12 +31,28 @@ Meteor.methods({
 
   EndTurn: function(game_id) {
     var game = Games.findOne({_id: game_id});
-    if (game.turn === 'player1') {
-      Games.update(game, {$set: {turn: 'player2'}});
-    } else {
-      Games.update(game, {$set: {turn: 'player1'}});
+    if (Ships.find({game_id: game._id, user_id: game.player1, destroyed: {$ne: 1}}).count() === 0) {
+        console.log("player 2 wins");
+        return 0;
+    } else if (Ships.find({game_id: game._id, user_id: game.player2, destroyed: {$ne: 1}}).count() === 0) {
+        console.log("player 1 wins");
+        return 0;
     }
+
+    if (game.turn === 'player1') {
+        Games.update(game, {$set: {turn: 'player2'}});
+    } else {
+      if (game.turn_count === game.max_turns) {
+        console.log("game over");
+        return 0;
+      } else {
+        Games.update(game, {$set: {turn: 'player1', turn_count: game.turn_count + 1}});
+      }
+    }
+
     game = Games.findOne({_id: game_id});
+    Ships.update({user_id: game[game.turn], game_id: game._id}, {$set: {has_attacked: 0}}, {multi: 1});
+
     if (game[game.turn] === 0) {
       Meteor.call('AITurn', game_id);
     }
@@ -73,13 +89,22 @@ Meteor.methods({
   Attack: function(params) {
     var ship = Ships.findOne({_id: params.ship_id});
     var target = Ships.findOne({_id: params.target_id});
+    if ((target.destroyed !== 1) && (ship.has_attacked !== 1)) {
+      if (target.shield > 0) {
+        target.shield -= ship.power;
+      } else {
+        target.armor -= ship.power;
+      }
 
-    if (target.shield > 0) {
-      target.shield -= ship.power;
-    } else {
-      target.armor -= ship.power;
+      if (target.armor <= 0) {
+        target.destroyed = 1;
+      }
+
+      ship.has_attacked = 1;
+
+      Ships.update({_id: ship._id}, ship);
+      Ships.update({_id: target._id}, target);
     }
-    Ships.update({_id: target._id}, target);
   },
 
   AITurn: function(game_id) {

@@ -1,0 +1,23 @@
+{
+  "0" : {
+    "name": "Single Laser",
+    "type": "Laser",
+    "power": 1,
+    "range": 2,
+    "battery": 1
+  },
+  "1" : {
+    "name": "Single Blaster",
+    "type": "Blaster",
+    "power": 2,
+    "range": 1,
+    "battery": 1
+  }
+  "2" : {
+    "name": "Single Ion",
+    "type": "Ion",
+    "power": 1,
+    "range": 3,
+    "battery": 3
+  }
+}
