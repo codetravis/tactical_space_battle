@@ -2,9 +2,9 @@
 Template.home.events({
   "click #quick_game": function(event) {
     var user_id = Meteor.userId();
-    Meteor.call('QuickGame', function() {
-      var game = Games.findOne({player1: user_id});
-      window.location.href = "game/" + game._id;
+    Meteor.call('QuickGame', function(err, data) {
+      var game_id = data;
+      window.location.href = "game/" + game_id;
       }
     );
   }
@@ -20,20 +20,10 @@ Template.game.helpers({
   game: function () {
     return Games.find({_id: Router.current().params.game_id});
   },
+});
 
-  draw_friend: function () {
-    var canvas = document.getElementById("main_map");
-    if (canvas.getContext) {
-      var context = canvas.getContext("2d");
-
-      var ship = Ships.findOne({_id: this._id});
-
-      context.fillStyle = "rgb(0, 100, 0, 0.80)";
-      context.fillRect(ship.x * 10, ship.y * 10, 10, 10);
-    } else {
-      console.log('no canvas?');
-    }
-  }
+Template.game.onRendered( function () {
+  Tracker.autorun(load_map);
 });
 
 Template.registerHelper('player_turn', function () {
@@ -54,7 +44,7 @@ Template.registerHelper('player_turn', function () {
 
 Template.game.events({
   "click #end_turn": function(event) {
-    Meteor.call('EndTurn', Router.current().params.game_id);
+    Meteor.call('EndTurn', Router.current().params.game_id, load_map);
   },
   "click .ship_action": function(event) {
     var ship_id = event.target.id;
@@ -103,3 +93,28 @@ Template.ship_action.events({
   }
 });
 
+var load_map = function () {
+  var canvas = document.getElementById("main_map");
+  if (canvas.getContext) {
+    var fleet = Ships.find({user_id: Meteor.userId(), game_id: Router.current().params.game_id});
+    var context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    fleet.forEach(function (ship) {
+      context.fillStyle = "rgb(0, 100, 0)";
+      context.fillRect(ship.x * 10, ship.y * 10, 10, 10);
+
+      var enemies = Ships.find({$and: [{game_id: ship.game_id}, 
+                               {user_id: {$ne: ship.user_id}},
+                               {destroyed: {$ne: 1}},
+                               {x: {$lt: (parseInt(ship.x, 10) + parseInt(ship.scan_range, 10)), $gt: (parseInt(ship.x, 10) - parseInt(ship.scan_range, 10))}},
+                               {y: {$lt: (parseInt(ship.y, 10) + parseInt(ship.scan_range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(ship.scan_range, 10))}}
+        ]});
+      enemies.forEach(function(badship) {
+      context.fillStyle = "rgb(100, 0, 0)";
+      context.fillRect(badship.x * 10, badship.y * 10, 10, 10);
+      });
+    });
+  } else {
+    console.log('no canvas?');
+  }
+};

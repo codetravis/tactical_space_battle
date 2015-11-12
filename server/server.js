@@ -27,6 +27,7 @@ Meteor.methods({
       Ships.insert(parsed_json[ship]);
       count += 1;
     }
+    return game_id;
   },
 
   EndTurn: function(game_id) {
@@ -51,7 +52,10 @@ Meteor.methods({
     }
 
     game = Games.findOne({_id: game_id});
-    Ships.update({user_id: game[game.turn], game_id: game._id}, {$set: {has_attacked: 0}}, {multi: 1});
+    var fleet = Ships.find({user_id: game[game.turn], game_id: game._id});
+    fleet.forEach(function(ship) {
+      Ships.update({_id: ship._id}, {$set: {has_attacked: 0, moves: ship.speed}});
+    });
 
     if (game[game.turn] === 0) {
       Meteor.call('AITurn', game_id);
@@ -67,12 +71,12 @@ Meteor.methods({
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
       } else if (direction === "down") {
-        if (ship.y < 10) {
+        if (ship.y < 9) {
           ship.y = parseInt(ship.y, 10) + 1;
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
       } else if (direction === "right") {
-        if (ship.x < 10) {
+        if (ship.x < 9) {
           ship.x = parseInt(ship.x, 10) + 1;
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
@@ -108,8 +112,29 @@ Meteor.methods({
   },
 
   AITurn: function(game_id) {
+    var ai_fleet = Ships.find({game_id: game_id, user_id: 0});
+    AIMoveFleet(ai_fleet);
     Meteor.call('EndTurn', game_id);
   }
-  
-
 });
+
+var AIMoveFleet = function(fleet) {
+    fleet.forEach(function(ship) {
+      var directions = [];
+      if (ship.x > 0) {
+        directions.push("left");
+      }
+      if (ship.x < 9) {
+        directions.push("right");
+      }
+      if (ship.y > 0) {
+        directions.push("up");
+      }
+      if (ship.y < 9) {
+        directions.push("down");
+      }
+      var move_choice = Math.floor(Math.random() * directions.length);
+      Meteor.call("MoveShip", ship._id, directions[move_choice]);
+
+    });
+};
