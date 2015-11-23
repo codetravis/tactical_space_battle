@@ -86,6 +86,7 @@ Meteor.methods({
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
       }
+      //console.log(ship.name + " " + ship.x + "-" + ship.y);
       Ships.update({_id: ship._id}, {$set: {x: ship.x, y: ship.y, moves: ship.moves}});
     }
   },
@@ -112,13 +113,16 @@ Meteor.methods({
   },
 
   AITurn: function(game_id) {
-    var ai_fleet = Ships.find({game_id: game_id, user_id: 0});
-    AIMoveFleet(ai_fleet);
+    AIMoveFleet(game_id);
+    AIAttackFleet(game_id);
     Meteor.call('EndTurn', game_id);
   }
 });
 
-var AIMoveFleet = function(fleet) {
+var AIMoveFleet = function(game_id) {
+  var maxmoves = Ships.findOne({game_id: game_id, user_id: 0, moves: {$gt: 0}}, {sort: {moves: -1}});
+  for (var i = 0; i < maxmoves.moves; i++) {
+    var fleet = Ships.find({game_id: game_id, user_id: 0, moves: {$gt: 0}});
     fleet.forEach(function(ship) {
       var directions = [];
       if (ship.x > 0) {
@@ -135,6 +139,22 @@ var AIMoveFleet = function(fleet) {
       }
       var move_choice = Math.floor(Math.random() * directions.length);
       Meteor.call("MoveShip", ship._id, directions[move_choice]);
-
     });
+  }
 };
+
+var AIAttackFleet = function(game_id) {
+  var fleet = Ships.find({game_id: game_id, user_id: 0, has_attacked: {$lt: 1}});
+  fleet.forEach(function(ship) {
+    var enemies = Ships.find({$and: [{game_id: ship.game_id},
+                                     {user_id: {$ne: 0}},
+                                     {x: {$lt: (parseInt(ship.x, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.x, 10) - parseInt(ship.attack_range, 10))}},
+                                     {y: {$lt: (parseInt(ship.y, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(ship.attack_range, 10))}}
+                                     ]}).fetch();
+    if (enemies.length > 0) {
+      console.log(enemies);
+      Meteor.call("Attack", {ship_id: ship._id, target_id: enemies[0]._id});
+    }                                
+  });
+};
+
