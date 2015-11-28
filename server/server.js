@@ -152,7 +152,6 @@ var AIAttackFleet = function(game_id) {
                                      {y: {$lt: (parseInt(ship.y, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(ship.attack_range, 10))}}
                                      ]}).fetch();
     if (enemies.length > 0) {
-      console.log(enemies);
       Meteor.call("Attack", {ship_id: ship._id, target_id: enemies[0]._id});
     }                                
   });

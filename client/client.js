@@ -11,7 +11,6 @@ Template.home.events({
 
 });
 
-
 Template.game.helpers({
   ships: function () {
       return Ships.find({user_id: Meteor.userId(), game_id: Router.current().params.game_id})
@@ -52,6 +51,10 @@ Template.game.events({
   }
 });
 
+Template.ship_action.onRendered( function () {
+  Tracker.autorun(load_map);
+});
+
 Template.ship_action.helpers({
   enemies_in_range: function () {
     var ship = Ships.findOne({_id: Router.current().params.ship_id});
@@ -71,32 +74,45 @@ Template.ship_action.helpers({
 Template.ship_action.events({
   "click #move_up": function(event) {
     var ship = Ships.findOne({_id: Router.current().params.ship_id});
-    Meteor.call('MoveShip', ship._id, "up");
+    Meteor.call('MoveShip', ship._id, "up", load_map);
   },
   "click #move_down": function(event) {
     var ship = Ships.findOne({_id: Router.current().params.ship_id});
-    Meteor.call('MoveShip', ship._id, "down"); 
+    Meteor.call('MoveShip', ship._id, "down", load_map); 
   },
   "click #move_right": function(event) {
     var ship = Ships.findOne({_id: Router.current().params.ship_id});
-    Meteor.call('MoveShip', ship._id, "right");
+    Meteor.call('MoveShip', ship._id, "right", load_map);
   },
   "click #move_left": function(event) {
     var ship = Ships.findOne({_id: Router.current().params.ship_id});
-    Meteor.call('MoveShip', ship._id, "left");
+    Meteor.call('MoveShip', ship._id, "left", load_map);
   },
   "click .attack": function(event) {
     var target_id = event.target.id;
     var ship_id = Router.current().params.ship_id;
 
-    Meteor.call('Attack', {ship_id: ship_id, target_id: target_id});
+    Meteor.call('Attack', {ship_id: ship_id, target_id: target_id}, load_map);
   }
 });
 
 var load_map = function () {
   var canvas = document.getElementById("main_map");
+  var game_id = "";
+  var active_ship = "";
+  var route_name = Router.current().route.getName();
+
   if (canvas.getContext) {
-    var fleet = Ships.find({user_id: Meteor.userId(), game_id: Router.current().params.game_id});
+    if(route_name === "game") {
+      game_id = Router.current().params.game_id;
+    } else {
+      active_ship = Ships.findOne({_id: Router.current().params.ship_id});
+      if (typeof active_ship === "undefined") {
+        return false;
+      }
+      game_id = active_ship.game_id;
+    }
+    var fleet = Ships.find({user_id: Meteor.userId(), game_id: game_id});
     var context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
     fleet.forEach(function (ship) {
@@ -110,10 +126,14 @@ var load_map = function () {
                                {y: {$lt: (parseInt(ship.y, 10) + parseInt(ship.scan_range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(ship.scan_range, 10))}}
         ]});
       enemies.forEach(function(badship) {
-      context.fillStyle = "rgb(100, 0, 0)";
-      context.fillRect(badship.x * 10, badship.y * 10, 10, 10);
+        context.fillStyle = "rgb(100, 0, 0)";
+        context.fillRect(badship.x * 10, badship.y * 10, 10, 10);
       });
     });
+    if(active_ship !== "") {
+      context.fillStyle = "rgb(0, 0, 100)";
+      context.fillRect(active_ship.x * 10, active_ship.y * 10, 10, 10);
+    }
   } else {
     console.log('no canvas?');
   }
