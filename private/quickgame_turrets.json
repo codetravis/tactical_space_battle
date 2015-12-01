@@ -12,12 +12,19 @@
     "power": 2,
     "range": 1,
     "battery": 1
-  }
+  },
   "2" : {
     "name": "Single Ion",
     "type": "Ion",
     "power": 1,
     "range": 3,
     "battery": 3
+  },
+  "3" : {
+    "name": "Double Laser",
+    "type": "Laser",
+    "power": 2,
+    "range": 2,
+    "battery": 2
   }
 }

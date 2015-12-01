@@ -1,0 +1,13 @@
+#targets {
+  display: inline-block;
+}
+
+#action_map_div {
+  display: inline-block;
+}
+
+#main_map {
+ border-style: solid;
+ border-width: thin;
+ border-color: black;
+}

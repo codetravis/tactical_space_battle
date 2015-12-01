@@ -3,14 +3,17 @@ Meteor.startup(function () {
   // temporarily cleanup all mongo objects when we restart the server
   Ships.remove({});
   Games.remove({});
+  Turrets.remove({});
 });
 
 Meteor.methods({
 
   QuickGame: function() {
     var user_id = Meteor.userId();
-    var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1', turn_count: 0, max_turns: 15});
+    var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1', turn_count: 0, max_turns: 30});
     var parsed_json = EJSON.parse(Assets.getText("quickgame.json"));
+    var parsed_turrets = EJSON.parse(Assets.getText("quickgame_turrets.json"));
+
     var count = 0;
     for (var ship in parsed_json) {
       parsed_json[ship].game_id = game_id;
@@ -24,7 +27,12 @@ Meteor.methods({
       } else { 
         parsed_json[ship].user_id = 0;
       }
-      Ships.insert(parsed_json[ship]);
+
+      var ship_id = Ships.insert(parsed_json[ship]);
+      //if (parsed_json[ship].hull == "Corvette") {
+        parsed_turrets["0"].ship_id = ship_id;
+        Turrets.insert(parsed_turrets["0"]);
+      //}
       count += 1;
     }
     return game_id;
@@ -52,7 +60,7 @@ Meteor.methods({
     }
 
     game = Games.findOne({_id: game_id});
-    var fleet = Ships.find({user_id: game[game.turn], game_id: game._id});
+    var fleet = Ships.find({user_id: game[game.turn], game_id: game._id, destroyed: {$ne: 1}});
     fleet.forEach(function(ship) {
       Ships.update({_id: ship._id}, {$set: {has_attacked: 0, moves: ship.speed}});
     });
@@ -87,7 +95,10 @@ Meteor.methods({
         }
       }
       //console.log(ship.name + " " + ship.x + "-" + ship.y);
-      Ships.update({_id: ship._id}, {$set: {x: ship.x, y: ship.y, moves: ship.moves}});
+      var occupied = Ships.find({game_id: ship.game_id, x: ship.x, y: ship.y, destroyed: {$ne: 1}}).count();
+      if (occupied < 1) {
+        Ships.update({_id: ship._id}, {$set: {x: ship.x, y: ship.y, moves: ship.moves}});
+      }
     }
   },
 
@@ -120,7 +131,7 @@ Meteor.methods({
 });
 
 var AIMoveFleet = function(game_id) {
-  var maxmoves = Ships.findOne({game_id: game_id, user_id: 0, moves: {$gt: 0}}, {sort: {moves: -1}});
+  var maxmoves = Ships.findOne({game_id: game_id, user_id: 0, moves: {$gt: 0}, destroyed: {$ne: 1}}, {sort: {moves: -1}});
   for (var i = 0; i < maxmoves.moves; i++) {
     var fleet = Ships.find({game_id: game_id, user_id: 0, moves: {$gt: 0}});
     fleet.forEach(function(ship) {
@@ -144,7 +155,7 @@ var AIMoveFleet = function(game_id) {
 };
 
 var AIAttackFleet = function(game_id) {
-  var fleet = Ships.find({game_id: game_id, user_id: 0, has_attacked: {$lt: 1}});
+  var fleet = Ships.find({game_id: game_id, user_id: 0, has_attacked: {$lt: 1}, destroyed: {$ne: 1}});
   fleet.forEach(function(ship) {
     var enemies = Ships.find({$and: [{game_id: ship.game_id},
                                      {user_id: {$ne: 0}},

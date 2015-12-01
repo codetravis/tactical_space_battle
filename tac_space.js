@@ -1,6 +1,7 @@
 
 Games = new Mongo.Collection("games");
 Ships = new Mongo.Collection("ships");
+Turrets = new Mongo.Collection("turrets");
 
 Router.route('/', {
   name: 'home',

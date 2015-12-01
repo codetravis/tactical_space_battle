@@ -57,17 +57,28 @@ Template.ship_action.onRendered( function () {
 
 Template.ship_action.helpers({
   enemies_in_range: function () {
-    var ship = Ships.findOne({_id: Router.current().params.ship_id});
+    var ship_id = Router.current().params.ship_id;
+    var ship = Ships.findOne({_id: ship_id});
+    var turret = Turrets.findOne({ship_id: ship_id}); 
     if (typeof ship === 'undefined') {
       return [];
     }
     
     var enemies = Ships.find({$and: [{game_id: ship.game_id}, 
                                      {user_id: {$ne: ship.user_id}},
-                                     {x: {$lt: (parseInt(ship.x, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.x, 10) - parseInt(ship.attack_range, 10))}},
-                                     {y: {$lt: (parseInt(ship.y, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(ship.attack_range, 10))}}
+                                     {x: {$lt: (parseInt(ship.x, 10) + parseInt(turret.range, 10)), $gt: (parseInt(ship.x, 10) - parseInt(turret.range, 10))}},
+                                     {y: {$lt: (parseInt(ship.y, 10) + parseInt(turret.range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(turret.range, 10))}},
+                                     {destroyed: {$ne: 1}}
                                      ]});
     return enemies;
+  },
+  get_ship_img: function () {
+    var ship = Ships.findOne({_id: Router.current().params.ship_id});
+    if (typeof ship === 'undefined') {
+      return "mystery_ship.png";
+    }
+
+    return ship.hull + ".png";
   }
 });
 
@@ -93,6 +104,10 @@ Template.ship_action.events({
     var ship_id = Router.current().params.ship_id;
 
     Meteor.call('Attack', {ship_id: ship_id, target_id: target_id}, load_map);
+  },
+  "click #done": function(event) {
+    var ship = Ships.findOne({_id: Router.current().params.ship_id});
+    window.location.href = "/game/" + ship.game_id;
   }
 });
 
@@ -117,7 +132,7 @@ var load_map = function () {
     context.clearRect(0, 0, canvas.width, canvas.height);
     fleet.forEach(function (ship) {
       context.fillStyle = "rgb(0, 100, 0)";
-      context.fillRect(ship.x * 10, ship.y * 10, 10, 10);
+      context.fillRect(ship.x * 20, ship.y * 20, 20, 20);
 
       var enemies = Ships.find({$and: [{game_id: ship.game_id}, 
                                {user_id: {$ne: ship.user_id}},
@@ -127,12 +142,12 @@ var load_map = function () {
         ]});
       enemies.forEach(function(badship) {
         context.fillStyle = "rgb(100, 0, 0)";
-        context.fillRect(badship.x * 10, badship.y * 10, 10, 10);
+        context.fillRect(badship.x * 20, badship.y * 20, 20, 20);
       });
     });
     if(active_ship !== "") {
       context.fillStyle = "rgb(0, 0, 100)";
-      context.fillRect(active_ship.x * 10, active_ship.y * 10, 10, 10);
+      context.fillRect(active_ship.x * 20, active_ship.y * 20, 20, 20);
     }
   } else {
     console.log('no canvas?');

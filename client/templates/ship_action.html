@@ -1,5 +1,10 @@
 <template name="ship_action">
 <h1>Ship Actions</h1>
+
+<div id="ship_img">
+  <img src="/{{get_ship_img}}">
+</div>
+
 <div id="move_actions">
 <h2>Moves</h2>
 <button id="move_up">Move Up</button><br/>
@@ -7,11 +12,18 @@
 <button id="move_right">Move Right</button><br/>
 <button id="move_down">Move Down</button>
 </div>
-<canvas id="main_map" height="200" width="200"></canvas>
+
+<div id="action_map_div">
+  <canvas id="main_map" height="200" width="200"></canvas>
+</div>
+
 <div id="targets">
 {{#each enemies_in_range}}
   {{> target}}
 {{/each}}
+</div>
+<div id="final_action_menu">
+  <button id="done">Done</button>
 </div>
 </template>
 
