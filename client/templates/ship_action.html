@@ -22,15 +22,15 @@
 
   <div id="ship_actions">
     <h2>Actions</h2>
-    <button id="recharge_shield">Charge Shield</button>
-    <button id="move_up">Move Up</button>
-    <button id="special_1">Special Action 1</button><br/>
-    <button id="move_left">Move Left</button>
-    <button id="special_2">Special Action 2</button>
-    <button id="move_right">Move Right</button><br/>
-    <button id="special_3">Special Action 3</button>
-    <button id="move_down">Move Down</button>
-    <button id="special_4">Special Action 4</button>
+    <img id="charge_shield" class="action_button" src="/charge_shield_button.png">
+    <img id="move_up" class="action_button" src="/up_button.png">
+    <img id="special_1" class="action_button" src="/placeholder_button.png">
+    <img id="move_left" class="action_button" src="/left_button.png">
+    <img id="special_2" class="action_button" src="/placeholder_button.png">
+    <img id="move_right" class="action_button" src="/right_button.png">
+    <img id="special_3" class="action_button" src="/placeholder_button.png">
+    <img id="move_down" class="action_button" src="/down_button.png">
+    <img id="special_4" class="action_button" src="/placeholder_button.png">
   </div>
 
   <div id="turret_list">
@@ -55,9 +55,9 @@
   <div class="turret_list">
     <img class="turret" src="/{{image}}" id="{{_id}}">
     <div class="turret_stats">
-      <span class="stat">R: {{range}}</span>
-      <span class="stat">P: {{power}}</span>
-      <span class="stat">E: {{energy}}</span>  
+      <span class="stat">Range: {{range}}</span>
+      <span class="stat">Power: {{power}}</span>
+      <span class="stat">Energy: {{energy}}</span>  
     </div>
   </div>
 </template>

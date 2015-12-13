@@ -23,15 +23,20 @@
 
 #ship_actions {
   display: inline-block;
+  width: 100px;
 }
 
 #ship_actions h2 {
   margin: 0 auto;
 }
 
-#ship_actions button {
+.action_button {
   width: 30px;
   height: 30px;
+}
+
+.action_button:hover {
+  background-color: #47EBF4;
 }
 
 #targets {

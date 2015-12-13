@@ -45,7 +45,7 @@ Template.registerHelper('player_turn', function () {
 
 Template.game.events({
   "click #end_turn": function(event) {
-    Meteor.call('EndTurn', Router.current().params.game_id, load_map);
+    Meteor.call('EndTurn', Router.current().params.game_id, check_for_win);
   },
   "click .listed_ship": function(event) {
     $(".selected").removeClass("selected");
@@ -125,6 +125,10 @@ Template.ship_action.events({
       Meteor.call('Attack', {turret_id: Session.get("turret_id"), target_id: target_id}, load_map);
     }
   },
+  "click #charge_shield": function(event) {
+    var ship_id = Router.current().params.ship_id;
+    Meteor.call('ChargeShield', {ship_id: ship_id});
+  },
   "click #back": function(event) {
     var ship = Ships.findOne({_id: Router.current().params.ship_id});
     window.location.href = "/game/" + ship.game_id;
@@ -136,6 +140,18 @@ Template.ship_action.events({
     Session.set("turret_id", turret_id);
   }
 });
+
+var check_for_win = function (err, data) {
+
+  if (data.message === "game over") {
+    window.location.href = "../lose_game";
+  } else if (data.message === "you won") {
+    window.location.href = "../win_game";
+  } else {
+    load_map();
+  }
+}
+
 
 var load_map = function () {
   var canvas = document.getElementById("main_map");

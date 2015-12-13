@@ -31,15 +31,17 @@ Meteor.methods({
       var ship_id = Ships.insert(parsed_json[ship]);
       parsed_turrets["0"].ship_id = ship_id;
       parsed_turrets["1"].ship_id = ship_id;
+      parsed_turrets["2"].ship_id = ship_id;
+      parsed_turrets["3"].ship_id = ship_id;
       
       if (parsed_json[ship].hull == "Corvette") {
         Turrets.insert(parsed_turrets["0"]);
         Turrets.insert(parsed_turrets["1"]);
       } else if (parsed_json[ship].hull == "Frigate") {
         Turrets.insert(parsed_turrets["0"]);
-        Turrets.insert(parsed_turrets["1"]);
         Turrets.insert(parsed_turrets["0"]);
         Turrets.insert(parsed_turrets["1"]);
+        Turrets.insert(parsed_turrets["3"]);
       }
 
       count += 1;
@@ -50,19 +52,16 @@ Meteor.methods({
   EndTurn: function(game_id) {
     var game = Games.findOne({_id: game_id});
     if (Ships.find({game_id: game._id, user_id: game.player1, destroyed: {$ne: 1}}).count() === 0) {
-        console.log("player 2 wins");
-        return 0;
+        return {message: "game over"};
     } else if (Ships.find({game_id: game._id, user_id: game.player2, destroyed: {$ne: 1}}).count() === 0) {
-        console.log("player 1 wins");
-        return 0;
+        return {message: "you won"};
     }
 
     if (game.turn === 'player1') {
         Games.update(game, {$set: {turn: 'player2'}});
     } else {
       if (game.turn_count === game.max_turns) {
-        console.log("game over");
-        return 0;
+        return {message: "game over"};
       } else {
         Games.update(game, {$set: {turn: 'player1', turn_count: game.turn_count + 1}});
       }
@@ -78,6 +77,9 @@ Meteor.methods({
 
     if (game[game.turn] === 0) {
       Meteor.call('AITurn', game_id);
+      return {message: "continue"};
+    } else {
+      return {message: "continue"};
     }
   },
 
@@ -141,9 +143,23 @@ Meteor.methods({
     }
   },
 
+  ChargeShield: function(params) {
+    var ship = Ships.findOne({_id: params.ship_id});
+    if (typeof ship !== 'undefined') {
+      if (ship.destroyed !== 1) {
+        if ((ship.shield < ship.full_shield) && (ship.energy >= 2)) {
+          ship.shield += 1;
+          ship.energy -= 2;
+          Ships.update({_id: ship._id}, ship);
+        }
+      }
+    }
+  },
+
   AITurn: function(game_id) {
     AIMoveFleet(game_id);
     AIAttackFleet(game_id);
+    AISpecialAction(game_id);
     Meteor.call('EndTurn', game_id);
   }
 });
@@ -154,20 +170,42 @@ var AIMoveFleet = function(game_id) {
     var fleet = Ships.find({game_id: game_id, user_id: 0, moves: {$gt: 0}});
     fleet.forEach(function(ship) {
       var directions = [];
-      if (ship.x > 0) {
-        directions.push("left");
+
+      var enemy_in_range = Ships.findOne({$and: [{game_id: ship.game_id}, 
+                               {user_id: {$ne: ship.user_id}},
+                               {destroyed: {$ne: 1}},
+                               {x: {$lte: (parseInt(ship.x, 10) + parseInt(ship.scan_range, 10)), $gte: (parseInt(ship.x, 10) - parseInt(ship.scan_range, 10))}},
+                               {y: {$lte: (parseInt(ship.y, 10) + parseInt(ship.scan_range, 10)), $gte: (parseInt(ship.y, 10) - parseInt(ship.scan_range, 10))}}
+        ]});
+      if (typeof enemies !== 'undefined') {
+         var move = "";
+         if (enemy_in_range.x > ship.x) {
+           move = "right";
+         } else if (enemy_in_range.x < ship.x) {
+           move = "left";
+         } else if (enemy_in_range.y < ship.y) {
+           move = "up";
+         } else if (enemy_in_range.y > ship.y) {
+           move = "down";
+         }
+         Meteor.call("MoveShip", ship._id, move);
+      } else {
+
+        if (ship.x > 0) {
+          directions.push("left");
+        }
+        if (ship.x < 9) {
+          directions.push("right");
+        }
+        if (ship.y > 0) {
+          directions.push("up");
+        }
+        if (ship.y < 9) {
+          directions.push("down");
+        }
+        var move_choice = Math.floor(Math.random() * directions.length);
+        Meteor.call("MoveShip", ship._id, directions[move_choice]);
       }
-      if (ship.x < 9) {
-        directions.push("right");
-      }
-      if (ship.y > 0) {
-        directions.push("up");
-      }
-      if (ship.y < 9) {
-        directions.push("down");
-      }
-      var move_choice = Math.floor(Math.random() * directions.length);
-      Meteor.call("MoveShip", ship._id, directions[move_choice]);
     });
   }
 };
@@ -191,3 +229,11 @@ var AIAttackFleet = function(game_id) {
   });
 };
 
+var AISpecialAction = function(game_id) {
+  var fleet = Ships.find({game_id: game_id, user_id: 0, has_attacked: {$lt: 1}, destroyed: {$ne: 1}});
+  fleet.forEach(function(ship) {
+    if ((ship.energy >= 2) && (ship.shield < ship.full_shield)) {
+      Meteor.call("ChargeShield", {ship_id: ship._id});
+    }
+  });
+}
