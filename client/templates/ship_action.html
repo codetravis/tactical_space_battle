@@ -1,35 +1,74 @@
 <template name="ship_action">
-<h1>Ship Actions</h1>
+<div class="wrapper">
+{{#with get_ship}}
+  <div class="section_title">
+    <h1>{{name}}</h1>
+    <button id="back">Back</button>
+  </div>
 
-<div id="ship_img">
-  <img src="/{{get_ship_img}}">
-</div>
+  <div id="ship_info">
+    <h2>{{hull}}</h2>
+    <div id="ship_img">
+      <img src="/{{hull}}.png">
+    </div>
 
-<div id="move_actions">
-<h2>Moves</h2>
-<button id="move_up">Move Up</button><br/>
-<button id="move_left">Move Left</button>
-<button id="move_right">Move Right</button><br/>
-<button id="move_down">Move Down</button>
-</div>
+    <div id="ship_stats">
+      <span class="stat">Armor : {{armor}}/{{full_armor}}</span>
+      <span class="stat">Shield : {{shield}}/{{full_shield}}</span>
+      <span class="stat">Energy: {{energy}}/{{full_energy}}</span>
+      <span class="stat">Moves : {{moves}}/{{speed}}</span>
+    </div>
+  </div>
 
-<div id="action_map_div">
-  <canvas id="main_map" height="200" width="200"></canvas>
-</div>
+  <div id="ship_actions">
+    <h2>Actions</h2>
+    <button id="recharge_shield">Charge Shield</button>
+    <button id="move_up">Move Up</button>
+    <button id="special_1">Special Action 1</button><br/>
+    <button id="move_left">Move Left</button>
+    <button id="special_2">Special Action 2</button>
+    <button id="move_right">Move Right</button><br/>
+    <button id="special_3">Special Action 3</button>
+    <button id="move_down">Move Down</button>
+    <button id="special_4">Special Action 4</button>
+  </div>
 
-<div id="targets">
-{{#each enemies_in_range}}
-  {{> target}}
-{{/each}}
+  <div id="turret_list">
+    <h2>Turrets</h2>
+    {{#each ship_turrets}}
+      {{> turret}}
+    {{/each}}  
+  </div>
+
+  <div id="targets">
+    <h2>Available Targets</h2>
+    {{#each enemies_in_range}}
+      {{> target}}
+    {{/each}}
+  </div>
+  {{/with}} 
+  <canvas id="main_map" width="400" height="400"></canvas>  
 </div>
-<div id="final_action_menu">
-  <button id="done">Done</button>
-</div>
+</template>
+
+<template name="turret">
+  <div class="turret_list">
+    <img class="turret" src="/{{image}}" id="{{_id}}">
+    <div class="turret_stats">
+      <span class="stat">R: {{range}}</span>
+      <span class="stat">P: {{power}}</span>
+      <span class="stat">E: {{energy}}</span>  
+    </div>
+  </div>
 </template>
 
 <template name="target">
   <div class="target">
-    <p>{{hull}} - {{name}} [{{armor}}] ({{shield}})</p>
+    <img src="/{{hull}}.png">
+    <div class="target_info">
+      <span>{{name}} - {{hull}}</span>
+      <span>[A:{{armor}}/{{full_armor}}] (S:{{shield}}/{{full_shield}})</span>
+    </div>
     <button class="attack" id="{{_id}}">Attack</button>
   </div>
 </template>

@@ -4,27 +4,31 @@
     "type": "Laser",
     "power": 1,
     "range": 2,
-    "battery": 1
+    "energy": 1,
+    "image": "single_laser.png"
   },
   "1" : {
     "name": "Single Blaster",
     "type": "Blaster",
     "power": 2,
     "range": 1,
-    "battery": 1
+    "energy": 1,
+    "image": "single_blaster.png"
   },
   "2" : {
     "name": "Single Ion",
     "type": "Ion",
     "power": 1,
     "range": 3,
-    "battery": 3
+    "energy": 3,
+    "image": "single_ion.png"
   },
   "3" : {
     "name": "Double Laser",
     "type": "Laser",
     "power": 2,
     "range": 2,
-    "battery": 2
+    "energy": 2,
+    "image": "double_laser.png"
   }
 }

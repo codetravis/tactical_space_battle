@@ -1,40 +1,47 @@
 <template name="game">
-{{#each game}}
-<h1>Game  Turn {{turn_count}} of {{max_turns}}</h1>
-{{/each}}
-<table id="shiplist">
-<thead>
-  <th>Name</th>
-  <th>Hull</th>
-  <th>Armor</th>
-  <th>Shield</th>
-  <th>Coordinates</th>
-  <th></th>
-</thead>
+<div class="wrapper">
+{{#with game}}
+<div class="section_title">
+  <h1>Turn {{turn_count}} of {{max_turns}}</h1>
+  {{#if player_turn}}
+    <button id="end_turn">End Turn</button>
+  {{/if}}
+</div>
+{{/with}}
+<div id="ship_list">
 {{#each ships}}
   {{> ship }}
 {{/each}}
-</table>
+</div>
 
-<canvas id="main_map" height="200" width="200"></canvas>
+<canvas id="main_map" width="400" height="400"></canvas>
 
-{{#if player_turn}}
-  <button id="end_turn">End Turn</button>
-{{/if}}
+</div>
 </template>
 
 
 <template name="ship">
-  <tr>
-    <td>{{name}}</td>
-    <td>{{hull}}</td>
-    <td>{{armor}}</td>
-    <td>{{shield}}</td>
-    <td>{{x}} - {{y}}</td>
-    <td>
+  <div class="listed_ship">
+    <p class="ship_header">{{name}} - {{hull}}  ({{x}}-{{y}})</p>
+    <img src="/{{hull}}.png" class="ship_icon">
+    <div class="ship_stats">
+      <span class="stat">Armor : {{armor}}/{{full_armor}}</span>
+      <span class="stat">Shield: {{shield}}/{{full_shield}}</span>
+      <span class="stat">Energy: {{energy}}/{{full_energy}}</span>
+    </div>
+    <div class="listed_ship_turrets">
+      {{#each ship_turrets}}
+        {{> list_ship_turret}}
+      {{/each}}
+    </div>
+    <div class="action_button_div">
       {{#if player_turn}}
-        <button class="ship_action" id="{{_id}}">Take Action</button>
+        <button class="take_ship_action" id="{{_id}}">Take Action</button>
       {{/if}}
-    </td>
-  </tr>
+    </div>
+  </div>
+</template>
+
+<template name="list_ship_turret">
+    <img class="single_turret" src="">
 </template>

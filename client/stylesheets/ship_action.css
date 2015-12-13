@@ -1,13 +1,103 @@
-#targets {
+
+#ship_info {
   display: inline-block;
+  margin-right: 20%;
+}
+
+#ship_info h2 {
+  margin: 0 auto;
+}
+
+#ship_img {
+  display: inline-block;
+}
+
+#ship_img img {
+  width: 60px;
+  height: 60px;
+}
+
+#ship_stats {
+  display: inline-block;
+}
+
+#ship_actions {
+  display: inline-block;
+}
+
+#ship_actions h2 {
+  margin: 0 auto;
+}
+
+#ship_actions button {
+  width: 30px;
+  height: 30px;
+}
+
+#targets {
+  display: block;
 }
 
 #action_map_div {
   display: inline-block;
 }
 
-#main_map {
- border-style: solid;
- border-width: thin;
- border-color: black;
+.turret {
+  width: 30px;
+  height: 30px;
+}
+
+.turret_stats {
+  font-size: small;
+  display: inline-block;
+}
+
+#turret_list {
+  display: block;
+  margin: 0 auto;
+  border-top: 1px solid black;
+}
+
+#turret_list h2 {
+  margin: 0 auto;
+}
+
+.turret_list {
+  display: inline-block;
+  padding: .5em;
+  border-right: 1px solid black;
+}
+
+#targets h2 {
+  margin: 0 auto;
+}
+
+.target {
+  width: 100%;
+  display: block;
+  margin: 0 auto;
+  padding: 1px;
+  border: 2px solid black;
+}
+
+.target img {
+  width: 50px;
+  height: 50px;
+  display: inline-block;
+  margin: 1px;
+}
+
+.target_info {
+  display: inline-block;
+}
+
+.target_info span {
+  display: block;
+}
+
+.attack {
+  width: 20%;
+  height: 40px;
+  display: inline-block;
+  float: right;
 }

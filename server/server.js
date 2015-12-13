@@ -29,10 +29,19 @@ Meteor.methods({
       }
 
       var ship_id = Ships.insert(parsed_json[ship]);
-      //if (parsed_json[ship].hull == "Corvette") {
-        parsed_turrets["0"].ship_id = ship_id;
+      parsed_turrets["0"].ship_id = ship_id;
+      parsed_turrets["1"].ship_id = ship_id;
+      
+      if (parsed_json[ship].hull == "Corvette") {
         Turrets.insert(parsed_turrets["0"]);
-      //}
+        Turrets.insert(parsed_turrets["1"]);
+      } else if (parsed_json[ship].hull == "Frigate") {
+        Turrets.insert(parsed_turrets["0"]);
+        Turrets.insert(parsed_turrets["1"]);
+        Turrets.insert(parsed_turrets["0"]);
+        Turrets.insert(parsed_turrets["1"]);
+      }
+
       count += 1;
     }
     return game_id;
@@ -62,7 +71,9 @@ Meteor.methods({
     game = Games.findOne({_id: game_id});
     var fleet = Ships.find({user_id: game[game.turn], game_id: game._id, destroyed: {$ne: 1}});
     fleet.forEach(function(ship) {
-      Ships.update({_id: ship._id}, {$set: {has_attacked: 0, moves: ship.speed}});
+      var energy = Math.min(ship.energy + ship.energy_recharge, ship.full_energy);
+      Ships.update({_id: ship._id}, {$set: {has_attacked: 0, moves: ship.speed, energy: energy}});
+      Turrets.update({ship_id: ship._id}, {$set: {has_attacked: 0}}, {multi: true});
     });
 
     if (game[game.turn] === 0) {
@@ -79,12 +90,12 @@ Meteor.methods({
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
       } else if (direction === "down") {
-        if (ship.y < 9) {
+        if (ship.y < 39) {
           ship.y = parseInt(ship.y, 10) + 1;
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
       } else if (direction === "right") {
-        if (ship.x < 9) {
+        if (ship.x < 39) {
           ship.x = parseInt(ship.x, 10) + 1;
           ship.moves = parseInt(ship.moves, 10) - 1;
         }
@@ -103,23 +114,30 @@ Meteor.methods({
   },
 
   Attack: function(params) {
-    var ship = Ships.findOne({_id: params.ship_id});
-    var target = Ships.findOne({_id: params.target_id});
-    if ((target.destroyed !== 1) && (ship.has_attacked !== 1)) {
-      if (target.shield > 0) {
-        target.shield -= ship.power;
-      } else {
-        target.armor -= ship.power;
+    var turret = Turrets.findOne({_id: params.turret_id});
+    if (typeof turret !== "undefined") {
+      var ship = Ships.findOne({_id: turret.ship_id});
+      var target = Ships.findOne({_id: params.target_id});
+      if ((target.destroyed !== 1) && (turret.has_attacked !== 1) && (ship.energy >= turret.energy)) {
+        if (target.shield > turret.power) {
+          target.shield -= turret.power;
+        } else {
+          var damage = turret.power - target.shield;
+          target.shield = 0;
+          target.armor -= damage;
+        }
+
+        if (target.armor <= 0) {
+          target.destroyed = 1;
+        }
+
+        turret.has_attacked = 1;
+        ship.energy -= turret.energy;
+
+        Turrets.update({_id: turret._id}, turret);
+        Ships.update({_id: target._id}, target);
+        Ships.update({_id: ship._id}, ship);
       }
-
-      if (target.armor <= 0) {
-        target.destroyed = 1;
-      }
-
-      ship.has_attacked = 1;
-
-      Ships.update({_id: ship._id}, ship);
-      Ships.update({_id: target._id}, target);
     }
   },
 
@@ -157,14 +175,19 @@ var AIMoveFleet = function(game_id) {
 var AIAttackFleet = function(game_id) {
   var fleet = Ships.find({game_id: game_id, user_id: 0, has_attacked: {$lt: 1}, destroyed: {$ne: 1}});
   fleet.forEach(function(ship) {
-    var enemies = Ships.find({$and: [{game_id: ship.game_id},
-                                     {user_id: {$ne: 0}},
-                                     {x: {$lt: (parseInt(ship.x, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.x, 10) - parseInt(ship.attack_range, 10))}},
-                                     {y: {$lt: (parseInt(ship.y, 10) + parseInt(ship.attack_range, 10)), $gt: (parseInt(ship.y, 10) - parseInt(ship.attack_range, 10))}}
-                                     ]}).fetch();
-    if (enemies.length > 0) {
-      Meteor.call("Attack", {ship_id: ship._id, target_id: enemies[0]._id});
-    }                                
+    var turrets = Turrets.find({ship_id: ship._id, has_attacked: {$ne: 1}});
+    turrets.forEach(function(turret) {
+      if (typeof turret !== "undefined") {
+        var enemies = Ships.find({$and: [{game_id: ship.game_id},
+                                         {user_id: {$ne: 0}},
+                                         {x: {$lte: (parseInt(ship.x, 10) + parseInt(turret.range, 10)), $gte: (parseInt(ship.x, 10) - parseInt(turret.range, 10))}},
+                                         {y: {$lte: (parseInt(ship.y, 10) + parseInt(turret.range, 10)), $gte: (parseInt(ship.y, 10) - parseInt(turret.range, 10))}}
+                                         ]}).fetch();
+        if (enemies.length > 0) {
+          Meteor.call("Attack", {turret_id: turret._id, target_id: enemies[0]._id});
+        }                        
+      }
+    });
   });
 };
 
