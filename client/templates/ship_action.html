@@ -52,7 +52,7 @@
 </template>
 
 <template name="turret">
-  <div class="turret_list">
+  <div class="turret_list attacked_{{has_attacked}}">
     <img class="turret" src="/{{image}}" id="{{_id}}">
     <div class="turret_stats">
       <span class="stat">Range: {{range}}</span>

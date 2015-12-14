@@ -73,6 +73,18 @@
   border-right: 1px solid black;
 }
 
+.attacked_1 {
+  background-color: yellow;
+}
+
+.attacked_0 {
+  background-color: green;
+}
+
+.attacked_ {
+  background-color: green;
+}
+
 #targets h2 {
   margin: 0 auto;
 }
