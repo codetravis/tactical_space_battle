@@ -198,7 +198,7 @@ var load_map = function () {
     });
     if(active_ship !== "") {
       if (active_ship.destroyed != "1") {
-        context.fillStyle = "rgb(0, 0, 100)";
+        context.fillStyle = "rgb(71, 235, 244)";
         context.fillRect(active_ship.x * 10, active_ship.y * 10, 10, 10);
       }
     }

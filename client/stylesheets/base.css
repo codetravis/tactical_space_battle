@@ -4,6 +4,13 @@
   margin: 0 auto;
 }
 
+#quick_game {
+  width: 50%;
+  display: block;
+  margin: 10px auto;
+  height: 50px;
+}
+
 .section_title {
   border-bottom: 5px solid black;
   margin-bottom: 5px;
