@@ -4,7 +4,7 @@
   margin: 0 auto;
 }
 
-#quick_game {
+.main_menu_button {
   width: 50%;
   display: block;
   margin: 10px auto;

@@ -5,8 +5,14 @@ Template.home.events({
     Meteor.call('QuickGame', function(err, data) {
       var game_id = data;
       window.location.href = "game/" + game_id;
-      }
-    );
+      });
+  },
+  "click #pvp_game": function(event) {
+    var user_id = Meteor.userId();
+    Meteor.call('JoinPvPGame', function(err, data) {
+      var game_id = data;
+      window.location.href = "game/" + game_id;
+    });
   }
 
 });
@@ -143,9 +149,9 @@ Template.ship_action.events({
 
 var check_for_win = function (err, data) {
 
-  if (data.message === "game over") {
+  if (data.message === "player 1 wins") {
     window.location.href = "../lose_game";
-  } else if (data.message === "you won") {
+  } else if (data.message === "player 2 wins") {
     window.location.href = "../win_game";
   } else {
     load_map();

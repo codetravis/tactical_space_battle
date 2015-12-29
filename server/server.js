@@ -10,7 +10,7 @@ Meteor.methods({
 
   QuickGame: function() {
     var user_id = Meteor.userId();
-    var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1', turn_count: 0, max_turns: 30});
+    var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1', turn_count: 0, max_turns: 30, pvp: 0});
     var parsed_json = EJSON.parse(Assets.getText("quickgame.json"));
     var parsed_turrets = EJSON.parse(Assets.getText("quickgame_turrets.json"));
 
@@ -49,12 +49,25 @@ Meteor.methods({
     return game_id;
   },
 
+  JoinPvPGame: function() {
+    var user_id = Meteor.userId();
+    var game = Games.findOne({player2: 0, pvp: 1})
+
+    if (typeof game === 'undefined') {
+      return NewPvPGame();
+    } else {
+      Games.update(game, {$set: {player2: user_id}});
+      Ships.update({game_id: game._id, user_id: 0}, {$set: {user_id: user_id}}, {multi: true});
+      return game._id;
+    }
+  },
+
   EndTurn: function(game_id) {
     var game = Games.findOne({_id: game_id});
     if (Ships.find({game_id: game._id, user_id: game.player1, destroyed: {$ne: 1}}).count() === 0) {
-        return {message: "game over"};
+        return {message: "player 2 wins"};
     } else if (Ships.find({game_id: game._id, user_id: game.player2, destroyed: {$ne: 1}}).count() === 0) {
-        return {message: "you won"};
+        return {message: "player 1 wins"};
     }
 
     if (game.turn === 'player1') {
@@ -75,7 +88,7 @@ Meteor.methods({
       Turrets.update({ship_id: ship._id}, {$set: {has_attacked: 0}}, {multi: true});
     });
 
-    if (game[game.turn] === 0) {
+    if ((game[game.turn] === 0) && (game['pvp'] !== 1)) {
       Meteor.call('AITurn', game_id);
       return {message: "continue"};
     } else {
@@ -236,4 +249,45 @@ var AISpecialAction = function(game_id) {
       Meteor.call("ChargeShield", {ship_id: ship._id});
     }
   });
-}
+};
+
+var NewPvPGame = function() {
+  var user_id = Meteor.userId();
+  var game_id = Games.insert({player1: user_id, player2: 0, turn: 'player1', turn_count: 0, max_turns: 30, pvp: 1});
+  var parsed_json = EJSON.parse(Assets.getText("quickgame.json"));
+  var parsed_turrets = EJSON.parse(Assets.getText("quickgame_turrets.json"));
+
+  var count = 0;
+  for (var ship in parsed_json) {
+    parsed_json[ship].game_id = game_id;
+    parsed_json[ship].x = parseInt(parsed_json[ship].x, 10);
+    parsed_json[ship].y = parseInt(parsed_json[ship].y, 10);
+    parsed_json[ship].shield = parseInt(parsed_json[ship].shield, 10);
+    parsed_json[ship].armor = parseInt(parsed_json[ship].armor, 10);
+    parsed_json[ship].power = parseInt(parsed_json[ship].power, 10);
+    if (count < 2) {
+      parsed_json[ship].user_id = user_id;
+    } else { 
+      parsed_json[ship].user_id = 0;
+    }
+
+    var ship_id = Ships.insert(parsed_json[ship]);
+    parsed_turrets["0"].ship_id = ship_id;
+    parsed_turrets["1"].ship_id = ship_id;
+    parsed_turrets["2"].ship_id = ship_id;
+    parsed_turrets["3"].ship_id = ship_id;
+    
+    if (parsed_json[ship].hull == "Corvette") {
+      Turrets.insert(parsed_turrets["0"]);
+      Turrets.insert(parsed_turrets["1"]);
+    } else if (parsed_json[ship].hull == "Frigate") {
+      Turrets.insert(parsed_turrets["0"]);
+      Turrets.insert(parsed_turrets["0"]);
+      Turrets.insert(parsed_turrets["1"]);
+      Turrets.insert(parsed_turrets["3"]);
+    }
+
+    count += 1;
+  }
+  return game_id;
+};
